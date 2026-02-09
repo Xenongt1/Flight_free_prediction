@@ -2,9 +2,46 @@
 Module for data preprocessing.
 """
 
-def preprocess_data(df):
+import pandas as pd
+from src.utils import get_logger
+
+logger = get_logger(__name__)
+
+def preprocess_data(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Preprocess the raw dataframe.
+    Preprocess the raw dataframe by cleaning missing values and fixing types.
+    
+    Args:
+        df (pd.DataFrame): Raw dataframe.
+        
+    Returns:
+        pd.DataFrame: Cleaned dataframe.
     """
-    # TODO: Implement preprocessing logic
-    return df
+    try:
+        logger.info("Starting preprocessing...")
+        initial_shape = df.shape
+        
+        # Drop junk columns
+        df = df.loc[:, ~df.columns.str.contains("Unnamed")]
+
+        # Handle missing values
+        # Note: In production, median should ideally be calculated from training set and applied to test.
+        # For simplicity here, we assume batch processing or we would move this to a pipeline transformer.
+        if "Base Fare (BDT)" in df.columns:
+            df["Base Fare (BDT)"].fillna(df["Base Fare (BDT)"].median(), inplace=True)
+            df = df[df["Base Fare (BDT)"] >= 0] # Remove invalid rows
+            
+        if "Tax & Surcharge (BDT)" in df.columns:
+            df["Tax & Surcharge (BDT)"].fillna(df["Tax & Surcharge (BDT)"].median(), inplace=True)
+
+        # Fix datatypes
+        if "Departure Date & Time" in df.columns:
+            df["Date"] = pd.to_datetime(df["Departure Date & Time"])
+            logger.info("Converted 'Departure Date & Time' to datetime object.")
+
+        logger.info(f"Preprocessing completed. Rows removed: {initial_shape[0] - df.shape[0]}")
+        return df
+    except Exception as e:
+        logger.error(f"Error during preprocessing: {e}")
+        raise
+
