@@ -24,6 +24,13 @@ def preprocess_data(df: pd.DataFrame) -> pd.DataFrame:
         # Drop junk columns
         df = df.loc[:, ~df.columns.str.contains("Unnamed")]
 
+        # Normalize City Names
+        # Replace 'Dacca' with 'Dhaka' for consistency
+        for col in ['Source', 'Destination']:
+            if col in df.columns:
+                df[col] = df[col].replace('Dacca', 'Dhaka')
+                logger.info(f"Normalized '{col}': Replaced 'Dacca' with 'Dhaka'.")
+
         # Handle missing values
         # Note: In production, median should ideally be calculated from training set and applied to test.
         # For simplicity here, we assume batch processing or we would move this to a pipeline transformer.

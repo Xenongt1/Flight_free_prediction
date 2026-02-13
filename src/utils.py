@@ -7,6 +7,18 @@ from src import config
 
 import time
 import functools
+from sqlalchemy import create_engine
+
+def get_db_engine():
+    """
+    Creates and returns a SQLAlchemy engine for the database.
+    """
+    try:
+        engine = create_engine(config.DB_CONNECTION_STRING)
+        return engine
+    except Exception as e:
+        get_logger(__name__).error(f"Error creating DB engine: {e}")
+        raise
 
 def get_logger(name):
     """
