@@ -7,3 +7,6 @@ jupyter
 psycopg2-binary
 sqlalchemy
 python-dotenv
+fastapi
+uvicorn
+pydantic

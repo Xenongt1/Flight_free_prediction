@@ -39,10 +39,6 @@ def load_data_from_db() -> pd.DataFrame:
     JOIN dim_date dd ON ff.date_id = dd.date_id
     JOIN dim_airline da ON ff.airline_id = da.airline_id
     JOIN dim_location dl_src ON ff.source_location_id = dl_src.location_id
-    FROM fact_flights ff
-    JOIN dim_date dd ON ff.date_id = dd.date_id
-    JOIN dim_airline da ON ff.airline_id = da.airline_id
-    JOIN dim_location dl_src ON ff.source_location_id = dl_src.location_id
     JOIN dim_location dl_dst ON ff.destination_location_id = dl_dst.location_id
     JOIN dim_flight_details dfd ON ff.detail_id = dfd.detail_id
     """

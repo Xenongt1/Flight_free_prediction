@@ -1,9 +1,5 @@
 """
-Module for training the model.
-"""
-
-"""
-Module for training the model.
+Module for training the model with sklearn Pipeline support.
 """
 import os
 import pandas as pd
@@ -15,28 +11,30 @@ from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.compose import TransformedTargetRegressor
+from sklearn.pipeline import Pipeline
 from sklearn.metrics import mean_squared_error, r2_score
 from src import config
 from src.utils import get_logger, save_model
 
 logger = get_logger(__name__)
 
-def train_model(X: pd.DataFrame, y: pd.Series, model_type: str = "random_forest", 
+def train_model(X: pd.DataFrame, y: pd.Series, preprocessing_pipeline=None,
+                model_type: str = "random_forest", 
                 log_target: bool = False, remove_outliers: bool = False) -> tuple:
     """
-    Train a machine learning model.
-    Supports: 'random_forest', 'linear_regression', 'ridge', 'lasso', 'decision_tree', 'gradient_boosting'.
-    Includes feature importance visualization.
+    Train a machine learning model with optional preprocessing pipeline.
     
     Args:
-        X (pd.DataFrame): Features.
+        X (pd.DataFrame): Raw features (before preprocessing) if preprocessing_pipeline is provided,
+                          or already-transformed features if preprocessing_pipeline is None.
         y (pd.Series): Target variable.
+        preprocessing_pipeline: sklearn Pipeline for feature engineering (optional).
         model_type (str): Type of model to train.
         log_target (bool): Whether to apply log1p transformation to target.
         remove_outliers (bool): Whether to remove outliers from training set (>99th percentile).
         
     Returns:
-        RandomForestRegressor: Trained model.
+        tuple: (trained_pipeline_or_model, X_test, y_test)
     """
     try:
         logger.info("Starting model training...")
@@ -151,26 +149,49 @@ def train_model(X: pd.DataFrame, y: pd.Series, model_type: str = "random_forest"
         else:
             model = base_model
             
+        # 4. Transform Data if Pipeline is provided
+        # The model must be fitted on TRANSFORMED data, not raw data
+        if preprocessing_pipeline is not None:
+            logger.info("Transforming training and test data using the preprocessing pipeline...")
+            # We fit on the training set to avoid leakage
+            # But the pipeline we return should be the one fitted on the whole X? 
+            # Actually, standard practice for production is fit on train, or fit on all if deploying.
+            # Here we fit on train for validation metrics accuracy.
+            X_train_transformed = preprocessing_pipeline.fit_transform(X_train, y_train)
+            X_test_transformed = preprocessing_pipeline.transform(X_test)
+            
+            # Convert to DataFrame to keep feature names if possible (useful for debugging/importance)
+            if hasattr(preprocessing_pipeline, 'get_feature_names_out'):
+                feature_names = preprocessing_pipeline.get_feature_names_out()
+                X_train_transformed = pd.DataFrame(X_train_transformed, columns=feature_names)
+                X_test_transformed = pd.DataFrame(X_test_transformed, columns=feature_names)
+            
+            # Update the variables used for fitting and evaluation
+            X_train_to_fit = X_train_transformed
+            X_test_to_eval = X_test_transformed
+        else:
+            X_train_to_fit = X_train
+            X_test_to_eval = X_test
         
         # Train model
         logger.info(f"Training {model_type}...")
-        model.fit(X_train, y_train)
+        model.fit(X_train_to_fit, y_train)
         logger.info("Model training completed.")
         
         if hasattr(model, 'feature_importances_'):
             try:
-                _plot_feature_importance(model, X_train.columns)
+                _plot_feature_importance(model, X_train_to_fit.columns)
             except Exception:
                 pass # safely ignore if plotting fails
         # Handle wrapped models (TransformedTargetRegressor or GridSearchCV)
         elif isinstance(model, TransformedTargetRegressor):
              if hasattr(model.regressor, 'feature_importances_'):
                  try:
-                    _plot_feature_importance(model.regressor, X_train.columns)
+                    _plot_feature_importance(model.regressor, X_train_to_fit.columns)
                  except Exception: pass
              elif hasattr(model.regressor_, 'feature_importances_'): # after fit
                  try:
-                    _plot_feature_importance(model.regressor_, X_train.columns)
+                    _plot_feature_importance(model.regressor_, X_train_to_fit.columns)
                  except Exception: pass
         elif isinstance(model, GridSearchCV):
              # Evaluate best estimator
@@ -178,15 +199,15 @@ def train_model(X: pd.DataFrame, y: pd.Series, model_type: str = "random_forest"
              if isinstance(best_est, TransformedTargetRegressor):
                  if hasattr(best_est.regressor_, 'feature_importances_'):
                      try:
-                        _plot_feature_importance(best_est.regressor_, X_train.columns)
+                        _plot_feature_importance(best_est.regressor_, X_train_to_fit.columns)
                      except Exception: pass
              elif hasattr(best_est, 'feature_importances_'):
                  try:
-                    _plot_feature_importance(best_est, X_train.columns)
+                    _plot_feature_importance(best_est, X_train_to_fit.columns)
                  except Exception: pass
 
         # Evaluate on test set (internal check)
-        y_pred = model.predict(X_test)
+        y_pred = model.predict(X_test_to_eval)
         
         # Since we use TransformedTargetRegressor, y_pred is already in original scale.
         # No manual inverse transform needed.
@@ -195,16 +216,25 @@ def train_model(X: pd.DataFrame, y: pd.Series, model_type: str = "random_forest"
         r2 = r2_score(y_test, y_pred)
         logger.info(f"Test Set Metrics - MSE: {mse:.4f}, R2: {r2:.4f}")
         
-        # Save model
         # Save model (if GridSearchCV, save best_estimator_)
         if isinstance(model, GridSearchCV):
             best_model = model.best_estimator_
             logger.info(f"Best Parameters: {model.best_params_}")
+        else:
+            best_model = model
+            
+        # If preprocessing pipeline was provided, wrap the model in a full pipeline
+        if preprocessing_pipeline is not None:
+            logger.info("Creating full pipeline (preprocessing + model)...")
+            full_pipeline = Pipeline([
+                ('preprocessing', preprocessing_pipeline),
+                ('model', best_model)
+            ])
+            save_model(full_pipeline, config.MODEL_PATH)
+            return full_pipeline, X_test, y_test
+        else:
             save_model(best_model, config.MODEL_PATH)
             return best_model, X_test, y_test
-        else:
-            save_model(model, config.MODEL_PATH)
-            return model, X_test, y_test
     except Exception as e:
         logger.error(f"Error during model training: {e}")
         raise
