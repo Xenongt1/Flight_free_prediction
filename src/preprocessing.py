@@ -31,6 +31,13 @@ def preprocess_data(df: pd.DataFrame) -> pd.DataFrame:
                 df[col] = df[col].replace('Dacca', 'Dhaka')
                 logger.info(f"Normalized '{col}': Replaced 'Dacca' with 'Dhaka'.")
 
+        # Cast numeric columns to float (Fix for PostgreSQL Decimal types)
+        numeric_cols = ["Base Fare (BDT)", "Tax & Surcharge (BDT)", "Total Fare (BDT)", "Duration (hrs)"]
+        for col in numeric_cols:
+            if col in df.columns:
+                df[col] = pd.to_numeric(df[col], errors='coerce').astype(float)
+                logger.info(f"Cast '{col}' to float.")
+
         # Handle missing values
         # Note: In production, median should ideally be calculated from training set and applied to test.
         # For simplicity here, we assume batch processing or we would move this to a pipeline transformer.
