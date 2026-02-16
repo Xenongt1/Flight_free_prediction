@@ -149,39 +149,34 @@ def train_model(X: pd.DataFrame, y: pd.Series, preprocessing_pipeline=None,
             
         # 4. Integrate Preprocessing and Model into a single Pipeline
         if preprocessing_pipeline is not None:
-            logger.info("Creating full pipeline (preprocessing + model)...")
-            # The model here could be a simple regressor, a TTR, or a GridSearchCV
-            full_pipeline = Pipeline([
-                ('preprocessing', preprocessing_pipeline),
-                ('model', model)
-            ])
+            logger.info("Merging preprocessing steps into a flat training pipeline...")
             
-            logger.info(f"Training full pipeline on {X_train.shape[0]} samples...")
+            # Extract steps from the preprocessing pipeline (which is now flat)
+            # and append the model as the final step.
+            steps = list(preprocessing_pipeline.steps)
+            steps.append(('model', model))
+            
+            full_pipeline = Pipeline(steps)
+            
+            logger.info(f"Training full pipeline (9 steps) on {X_train.shape[0]} samples...")
             full_pipeline.fit(X_train, y_train)
             
             # Prepare for evaluation
-            # For evaluation and prediction, we use the raw X_test
             X_test_to_eval = X_test
             trained_model = full_pipeline
-            
-            # For feature importance plotting, we need transformed data names
-            try:
-                # Extract transformed features names
-                preprocessor = full_pipeline.named_steps['preprocessing']
-                if hasattr(preprocessor, 'get_feature_names_out'):
-                    feature_names = preprocessor.get_feature_names_out()
-                    # Plot importance if applicable
-                    _plot_feature_importance_helper(model, feature_names)
-            except Exception as e:
-                logger.warning(f"Feature importance plotting skipped: {e}")
         else:
             logger.info(f"Training model on {X_train.shape[0]} samples...")
             model.fit(X_train, y_train)
             X_test_to_eval = X_test
             trained_model = model
             
-            # Plot importance if applicable
-            _plot_feature_importance_helper(model, X_train.columns)
+        # Optional: Log feature names produced by the preprocessing portion
+        try:
+             # If we have a pipeline with a preprocessor step, we can log the feature names
+             if hasattr(trained_model, 'named_steps') and 'preprocessor' in trained_model.named_steps:
+                 feature_names = trained_model.named_steps['preprocessor'].get_feature_names_out()
+                 logger.info(f"Pipeline produced {len(feature_names)} features for training.")
+        except Exception: pass
 
         # 5. Evaluate on test set
         logger.info("Evaluating model on test set...")

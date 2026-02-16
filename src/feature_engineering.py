@@ -32,36 +32,17 @@ def create_preprocessing_pipeline(scale_numeric: bool = True):
     """
     logger.info("Creating preprocessing pipeline...")
     
-    # 1. Feature Derivation Pipeline (Sequential)
-    # These steps add new columns to the dataframe
-    feature_generation = Pipeline([
-        ('date_engineer', DateFeatureEngineer(date_col='Date')),
-        ('time_of_day', TimeOfDayEngineer(hour_col='Dep_Hour')),
-        ('cyclical', CyclicalFeatureEngineer()),
-        ('route', RouteEngineer()),
-        ('duration_cat', DurationCategoryEngineer(duration_col='Duration (hrs)')),
-        ('season', SeasonEngineer()),
-        ('ordinal', CustomOrdinalEncoder()), # Encodes Stopovers and Class
-    ])
-    
-    # 2. Categorical Encoding (OneHot)
-    # These columns will be One-Hot Encoded
+    # Define categorical and numerical columns for the preprocessor
     categorical_cols = [
         "Airline", "Source", "Destination", "Time_of_Day", 
         "Aircraft Type", "Season", "Duration_Category"
     ]
     
-    # 3. Numerical Scaling
-    # These columns will be Scaled
     numeric_cols = [
         "Day", "Month", "Weekday", "Dep_Hour", "Stopovers", "Class_Encoded",
         "Month_Sin", "Month_Cos", "Day_Sin", "Day_Cos", 
         "Weekday_Sin", "Weekday_Cos", "Dep_Hour_Sin", "Dep_Hour_Cos"
     ]
-    
-    # We create a ColumnTransformer that handles only columns that exist
-    # To make this robust, we'll wrap it in a function or use a more dynamic approach.
-    # But since this is a factory, we'll assume these columns are produced by feature_gen.
     
     preprocessor = ColumnTransformer(
         transformers=[
@@ -72,13 +53,17 @@ def create_preprocessing_pipeline(scale_numeric: bool = True):
         verbose_feature_names_out=False
     )
     
-    # Complete Pipeline
-    full_pipeline = Pipeline([
-        ('feature_gen', feature_generation),
+    # Return a FLAT pipeline to avoid NotFittedError issues with nesting
+    return Pipeline([
+        ('date_engineer', DateFeatureEngineer(date_col='Date')),
+        ('time_of_day', TimeOfDayEngineer(hour_col='Dep_Hour')),
+        ('cyclical', CyclicalFeatureEngineer()),
+        ('route', RouteEngineer()),
+        ('duration_cat', DurationCategoryEngineer(duration_col='Duration (hrs)')),
+        ('season', SeasonEngineer()),
+        ('ordinal', CustomOrdinalEncoder()),
         ('preprocessor', preprocessor)
     ])
-    
-    return full_pipeline
 
 def engineer_features(df: pd.DataFrame, encode: bool = True, scale: bool = False) -> pd.DataFrame:
     """
