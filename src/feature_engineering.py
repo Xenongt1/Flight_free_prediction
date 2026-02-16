@@ -48,7 +48,7 @@ def create_preprocessing_pipeline(scale_numeric: bool = True):
     # These columns will be One-Hot Encoded
     categorical_cols = [
         "Airline", "Source", "Destination", "Time_of_Day", 
-        "Aircraft Type", "Season", "Route", "Duration_Category"
+        "Aircraft Type", "Season", "Duration_Category"
     ]
     
     # 3. Numerical Scaling

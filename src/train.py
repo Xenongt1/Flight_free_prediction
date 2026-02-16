@@ -72,10 +72,10 @@ def train_model(X: pd.DataFrame, y: pd.Series, preprocessing_pipeline=None,
         elif model_type == "tune_gradient_boosting":
             logger.info("Starting Hyperparameter Tuning for Gradient Boosting...")
             param_grid = {
-                'n_estimators': [100, 200],
-                'learning_rate': [0.05, 0.1],
+                'n_estimators': [100], # Reduced from [100, 200]
+                'learning_rate': [0.1], # Kept the most common sweet spot
                 'max_depth': [3, 5],
-                'subsample': [0.8, 1.0]
+                'subsample': [0.8] # Standard for GB
             }
             # Note: For GridSearchCV inside TransformedTargetRegressor, we usually wrap the grid search or search inside.
             # However, simpler: Wrap the Regressor, then GridSearch the Wrapper? Or GridSearch the Regressor, then Wrap?
