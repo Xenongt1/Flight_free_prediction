@@ -1,0 +1,11 @@
+{
+    "Airline": "Jet Airways",
+    "Date": "2024-03-15",
+    "Source": "Dhaka",
+    "Destination": "Chittagong",
+    "Stopovers": "Direct",
+    "Class": "Economy",
+    "Duration_hrs": 1.5,
+    "Aircraft_Type": "Boeing 737",
+    "Booking_Source": "Travel Agent"
+}

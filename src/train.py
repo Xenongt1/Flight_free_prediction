@@ -51,9 +51,7 @@ def train_model(X: pd.DataFrame, y: pd.Series, preprocessing_pipeline=None,
             X_train = X_train[mask]
             y_train = y_train[mask]
 
-            logger.info(f"Removing outliers > {upper_limit:.2f} from training set. Dropped {(~mask).sum()} rows.")
-            X_train = X_train[mask]
-            y_train = y_train[mask]
+
 
         # Initialize model base
         if model_type == "linear_regression":
@@ -161,10 +159,14 @@ def train_model(X: pd.DataFrame, y: pd.Series, preprocessing_pipeline=None,
             X_test_transformed = preprocessing_pipeline.transform(X_test)
             
             # Convert to DataFrame to keep feature names if possible (useful for debugging/importance)
-            if hasattr(preprocessing_pipeline, 'get_feature_names_out'):
-                feature_names = preprocessing_pipeline.get_feature_names_out()
-                X_train_transformed = pd.DataFrame(X_train_transformed, columns=feature_names)
-                X_test_transformed = pd.DataFrame(X_test_transformed, columns=feature_names)
+            # Convert to DataFrame to keep feature names if possible (useful for debugging/importance)
+            try:
+                if hasattr(preprocessing_pipeline, 'get_feature_names_out'):
+                    feature_names = preprocessing_pipeline.get_feature_names_out()
+                    X_train_transformed = pd.DataFrame(X_train_transformed, columns=feature_names)
+                    X_test_transformed = pd.DataFrame(X_test_transformed, columns=feature_names)
+            except (AttributeError, ValueError, Exception) as e:
+                logger.warning(f"Could not get feature names from pipeline: {e}. Proceeding with numpy array.")
             
             # Update the variables used for fitting and evaluation
             X_train_to_fit = X_train_transformed
