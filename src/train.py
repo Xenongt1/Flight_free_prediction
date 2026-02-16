@@ -147,97 +147,53 @@ def train_model(X: pd.DataFrame, y: pd.Series, preprocessing_pipeline=None,
         else:
             model = base_model
             
-        # 4. Transform Data if Pipeline is provided
-        # The model must be fitted on TRANSFORMED data, not raw data
+        # 4. Integrate Preprocessing and Model into a single Pipeline
         if preprocessing_pipeline is not None:
-            logger.info("Fitting and transforming data using the preprocessing pipeline...")
+            logger.info("Creating full pipeline (preprocessing + model)...")
+            # The model here could be a simple regressor, a TTR, or a GridSearchCV
+            full_pipeline = Pipeline([
+                ('preprocessing', preprocessing_pipeline),
+                ('model', model)
+            ])
             
-            # Using fit_transform on training data is more robust for maintaining internal state
-            X_train_transformed = preprocessing_pipeline.fit_transform(X_train, y_train)
-            X_test_transformed = preprocessing_pipeline.transform(X_test)
+            logger.info(f"Training full pipeline on {X_train.shape[0]} samples...")
+            full_pipeline.fit(X_train, y_train)
             
-            logger.info(f"Transformation complete. Train shape: {X_train_transformed.shape}, Test shape: {X_test_transformed.shape}")
-            
-            # Convert to DataFrame to keep feature names if possible
-            try:
-                # In newer sklearn, we can get feature names from the pipeline
-                if hasattr(preprocessing_pipeline, 'get_feature_names_out'):
-                    feature_names = preprocessing_pipeline.get_feature_names_out()
-                    X_train_transformed = pd.DataFrame(X_train_transformed, columns=feature_names)
-                    X_test_transformed = pd.DataFrame(X_test_transformed, columns=feature_names)
-                    logger.info("Successfully maintained feature names in transformed DataFrames.")
-            except Exception as e:
-                logger.warning(f"Note: Using numpy arrays for training (could not get feature names: {e})")
-            
-            # Update the variables used for fitting and evaluation
-            X_train_to_fit = X_train_transformed
-            X_test_to_eval = X_test_transformed
-        else:
-            X_train_to_fit = X_train
+            # Prepare for evaluation
+            # For evaluation and prediction, we use the raw X_test
             X_test_to_eval = X_test
-        
-        # Train model
-        logger.info(f"Training {model_type}...")
-        model.fit(X_train_to_fit, y_train)
-        logger.info("Model training completed.")
-        
-        if hasattr(model, 'feature_importances_'):
+            trained_model = full_pipeline
+            
+            # For feature importance plotting, we need transformed data names
             try:
-                _plot_feature_importance(model, X_train_to_fit.columns)
-            except Exception:
-                pass # safely ignore if plotting fails
-        # Handle wrapped models (TransformedTargetRegressor or GridSearchCV)
-        elif isinstance(model, TransformedTargetRegressor):
-             if hasattr(model.regressor, 'feature_importances_'):
-                 try:
-                    _plot_feature_importance(model.regressor, X_train_to_fit.columns)
-                 except Exception: pass
-             elif hasattr(model.regressor_, 'feature_importances_'): # after fit
-                 try:
-                    _plot_feature_importance(model.regressor_, X_train_to_fit.columns)
-                 except Exception: pass
-        elif isinstance(model, GridSearchCV):
-             # Evaluate best estimator
-             best_est = model.best_estimator_
-             if isinstance(best_est, TransformedTargetRegressor):
-                 if hasattr(best_est.regressor_, 'feature_importances_'):
-                     try:
-                        _plot_feature_importance(best_est.regressor_, X_train_to_fit.columns)
-                     except Exception: pass
-             elif hasattr(best_est, 'feature_importances_'):
-                 try:
-                    _plot_feature_importance(best_est, X_train_to_fit.columns)
-                 except Exception: pass
+                # Extract transformed features names
+                preprocessor = full_pipeline.named_steps['preprocessing']
+                if hasattr(preprocessor, 'get_feature_names_out'):
+                    feature_names = preprocessor.get_feature_names_out()
+                    # Plot importance if applicable
+                    _plot_feature_importance_helper(model, feature_names)
+            except Exception as e:
+                logger.warning(f"Feature importance plotting skipped: {e}")
+        else:
+            logger.info(f"Training model on {X_train.shape[0]} samples...")
+            model.fit(X_train, y_train)
+            X_test_to_eval = X_test
+            trained_model = model
+            
+            # Plot importance if applicable
+            _plot_feature_importance_helper(model, X_train.columns)
 
-        # Evaluate on test set (internal check)
-        y_pred = model.predict(X_test_to_eval)
-        
-        # Since we use TransformedTargetRegressor, y_pred is already in original scale.
-        # No manual inverse transform needed.
+        # 5. Evaluate on test set
+        logger.info("Evaluating model on test set...")
+        y_pred = trained_model.predict(X_test_to_eval)
             
         mse = mean_squared_error(y_test, y_pred)
         r2 = r2_score(y_test, y_pred)
         logger.info(f"Test Set Metrics - MSE: {mse:.4f}, R2: {r2:.4f}")
         
-        # Save model (if GridSearchCV, save best_estimator_)
-        if isinstance(model, GridSearchCV):
-            best_model = model.best_estimator_
-            logger.info(f"Best Parameters: {model.best_params_}")
-        else:
-            best_model = model
-            
-        # If preprocessing pipeline was provided, wrap the model in a full pipeline
-        if preprocessing_pipeline is not None:
-            logger.info("Creating full pipeline (preprocessing + model)...")
-            full_pipeline = Pipeline([
-                ('preprocessing', preprocessing_pipeline),
-                ('model', best_model)
-            ])
-            save_model(full_pipeline, config.MODEL_PATH)
-            return full_pipeline, X_test, y_test
-        else:
-            save_model(best_model, config.MODEL_PATH)
-            return best_model, X_test, y_test
+        # 6. Save and Return
+        save_model(trained_model, config.MODEL_PATH)
+        return trained_model, X_test, y_test
     except Exception as e:
         logger.error(f"Error during model training: {e}")
         raise
@@ -286,4 +242,23 @@ def _plot_feature_importance(model, feature_names):
             logger.info("Feature importance plot saved.")
     except Exception as e:
         logger.warning(f"Could not plot feature importance: {e}")
+
+def _plot_feature_importance_helper(model, feature_names):
+    """Helper to extract regressor from various wrappers and plot importance."""
+    regressor = None
+    
+    # Unwrap GridSearchCV
+    if hasattr(model, 'best_estimator_'):
+        model = model.best_estimator_
+    
+    # Unwrap TransformedTargetRegressor
+    if hasattr(model, 'regressor_'):
+        regressor = model.regressor_
+    elif hasattr(model, 'regressor'):
+        regressor = model.regressor
+    else:
+        regressor = model
+        
+    if hasattr(regressor, 'feature_importances_'):
+        _plot_feature_importance(regressor, feature_names)
 
