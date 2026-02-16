@@ -1,54 +1,54 @@
 
 --- Average Fare per Airline ---
 Airline
-Turkish Airlines             75547.268629
-AirAsia                      74534.390651
-Cathay Pacific               73325.091124
-Thai Airways                 72845.789993
-Malaysian Airlines           72775.180201
-IndiGo                       72504.433122
-Air India                    72474.178419
-US-Bangla Airlines           72088.289025
-Kuwait Airways               71988.276107
-Etihad Airways               71785.242045
-Gulf Air                     71458.163828
-SriLankan Airlines           71265.261154
-British Airways              70555.536205
-Biman Bangladesh Airlines    70192.969287
-Emirates                     70106.149413
-Air Arabia                   69924.006965
-Qatar Airways                69865.536487
-Lufthansa                    69293.163879
-Saudia                       69270.676123
-FlyDubai                     68987.689206
-Air Astra                    68497.407804
-NovoAir                      68350.859248
-Singapore Airlines           68323.930914
-Vistara                      68108.238844
+Turkish Airlines             74738.632414
+AirAsia                      73830.160662
+Cathay Pacific               72594.044027
+Malaysian Airlines           72247.164158
+Thai Airways                 72062.786986
+IndiGo                       71904.328893
+Air India                    71774.467224
+US-Bangla Airlines           71421.252046
+Kuwait Airways               71274.819872
+Etihad Airways               71062.528668
+Gulf Air                     70814.669005
+SriLankan Airlines           70706.946124
+British Airways              69892.944183
+Biman Bangladesh Airlines    69501.051741
+Emirates                     69363.935514
+Qatar Airways                69285.314045
+Air Arabia                   69094.366613
+Lufthansa                    68608.155127
+Saudia                       68461.151090
+Flydubai                     68310.263316
+Air Astra                    67838.704523
+NovoAir                      67833.988964
+Singapore Airlines           67556.066301
+Vistara                      67497.640224
 Name: Total Fare (BDT), dtype: float64
 
 --- Most Popular Routes ---
-Source  Destination
-RJH     SIN            417
-DAC     DXB            413
-BZL     YYZ            410
-CGP     BKK            408
-CXB     DEL            408
+Source       Destination                  
+Rajshahi     Singapore Changi                 417
+Dhaka        Dubai International              413
+Barisal      Toronto Pearson International    410
+Chittagong   Bangkok                          408
+Cox's Bazar  Delhi                            408
 dtype: int64
 
 --- Seasonal Fare Variation ---
 Season
-Winter    78771.520102
-Summer    69178.035498
-Spring    68604.202442
-Autumn    67855.062793
+Winter    78021.390821
+Summer    68550.967096
+Spring    67957.688767
+Autumn    67146.625314
 Name: Total Fare (BDT), dtype: float64
 
 --- Top 5 Most Expensive Routes ---
-Source  Destination
-SPD     BKK            117951.572347
-CXB     YYZ            117848.709744
-        LHR            116667.654377
-        JFK            116476.311601
-BZL     JFK            115968.436285
+Source       Destination                  
+Saidpur      Bangkok                          117348.637113
+Cox's Bazar  Toronto Pearson International    116616.849086
+             London Heathrow                  116038.499462
+Barisal      New York                         115428.341779
+Cox's Bazar  New York                         115370.159897
 Name: Total Fare (BDT), dtype: float64
