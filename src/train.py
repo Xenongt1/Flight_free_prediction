@@ -106,7 +106,7 @@ def train_model(X: pd.DataFrame, y: pd.Series, preprocessing_pipeline=None,
                     param_grid=param_grid,
                     cv=3,
                     scoring='r2',
-                    n_jobs=-1,
+                    n_jobs=1, # Set to 1 to avoid BrokenPipeError in Airflow/Docker
                     verbose=2
                 )
                 # Since we handled wrapping here, we set log_target to False for the final wrapping step below
@@ -118,7 +118,7 @@ def train_model(X: pd.DataFrame, y: pd.Series, preprocessing_pipeline=None,
                     param_grid=param_grid,
                     cv=3,
                     scoring='r2',
-                    n_jobs=-1,
+                    n_jobs=1, # Set to 1 to avoid BrokenPipeError in Airflow/Docker
                     verbose=2
                 )
                 log_target_handled = False
@@ -129,7 +129,7 @@ def train_model(X: pd.DataFrame, y: pd.Series, preprocessing_pipeline=None,
                 n_estimators=100,
                 max_depth=20, # Added depth limit to prevent overfitting
                 random_state=config.RANDOM_SEED,
-                n_jobs=-1
+                n_jobs=1 # Set to 1 to avoid BrokenPipeError in Airflow/Docker
             )
             logger.info("Initialized Random Forest Regressor.")
 
