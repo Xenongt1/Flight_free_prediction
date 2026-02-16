@@ -150,23 +150,26 @@ def train_model(X: pd.DataFrame, y: pd.Series, preprocessing_pipeline=None,
         # 4. Transform Data if Pipeline is provided
         # The model must be fitted on TRANSFORMED data, not raw data
         if preprocessing_pipeline is not None:
-            logger.info("Transforming training and test data using the preprocessing pipeline...")
-            # We fit on the training set to avoid leakage
-            # But the pipeline we return should be the one fitted on the whole X? 
-            # Actually, standard practice for production is fit on train, or fit on all if deploying.
-            # Here we fit on train for validation metrics accuracy.
-            X_train_transformed = preprocessing_pipeline.fit_transform(X_train, y_train)
+            logger.info("Fitting and transforming data using the preprocessing pipeline...")
+            # We fit on the training set only to avoid leakage
+            preprocessing_pipeline.fit(X_train, y_train)
+            
+            # Now transform both sets
+            X_train_transformed = preprocessing_pipeline.transform(X_train)
             X_test_transformed = preprocessing_pipeline.transform(X_test)
             
-            # Convert to DataFrame to keep feature names if possible (useful for debugging/importance)
-            # Convert to DataFrame to keep feature names if possible (useful for debugging/importance)
+            logger.info(f"Transformation complete. Train shape: {X_train_transformed.shape}, Test shape: {X_test_transformed.shape}")
+            
+            # Convert to DataFrame to keep feature names if possible
             try:
+                # In newer sklearn, we can get feature names from the pipeline
                 if hasattr(preprocessing_pipeline, 'get_feature_names_out'):
                     feature_names = preprocessing_pipeline.get_feature_names_out()
                     X_train_transformed = pd.DataFrame(X_train_transformed, columns=feature_names)
                     X_test_transformed = pd.DataFrame(X_test_transformed, columns=feature_names)
-            except (AttributeError, ValueError, Exception) as e:
-                logger.warning(f"Could not get feature names from pipeline: {e}. Proceeding with numpy array.")
+                    logger.info("Successfully maintained feature names in transformed DataFrames.")
+            except Exception as e:
+                logger.warning(f"Note: Using numpy arrays for training (could not get feature names: {e})")
             
             # Update the variables used for fitting and evaluation
             X_train_to_fit = X_train_transformed
