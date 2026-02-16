@@ -27,10 +27,9 @@ def log_training_metadata(data_max_timestamp, records_count, r2_score=None, mse=
     try:
         engine = create_engine(connection_string)
         
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             # Create schema if it doesn't exist
             conn.execute(text("CREATE SCHEMA IF NOT EXISTS ml_metadata"))
-            conn.commit()
             
             # Create table if it doesn't exist
             create_table_query = text("""
@@ -47,7 +46,6 @@ def log_training_metadata(data_max_timestamp, records_count, r2_score=None, mse=
                 )
             """)
             conn.execute(create_table_query)
-            conn.commit()
             
             # Insert training log
             insert_query = text("""
@@ -64,7 +62,6 @@ def log_training_metadata(data_max_timestamp, records_count, r2_score=None, mse=
                 'mse': mse,
                 'version': datetime.now().strftime('%Y%m%d_%H%M%S')
             })
-            conn.commit()
             
             print(f"✅ Training metadata logged successfully. Data timestamp: {data_max_timestamp}, Records: {records_count}")
             
