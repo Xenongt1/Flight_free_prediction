@@ -151,11 +151,9 @@ def train_model(X: pd.DataFrame, y: pd.Series, preprocessing_pipeline=None,
         # The model must be fitted on TRANSFORMED data, not raw data
         if preprocessing_pipeline is not None:
             logger.info("Fitting and transforming data using the preprocessing pipeline...")
-            # We fit on the training set only to avoid leakage
-            preprocessing_pipeline.fit(X_train, y_train)
             
-            # Now transform both sets
-            X_train_transformed = preprocessing_pipeline.transform(X_train)
+            # Using fit_transform on training data is more robust for maintaining internal state
+            X_train_transformed = preprocessing_pipeline.fit_transform(X_train, y_train)
             X_test_transformed = preprocessing_pipeline.transform(X_test)
             
             logger.info(f"Transformation complete. Train shape: {X_train_transformed.shape}, Test shape: {X_test_transformed.shape}")
