@@ -63,8 +63,8 @@ def log_training_metadata(data_max_timestamp, records_count, r2_score=None, mse=
                 'version': datetime.now().strftime('%Y%m%d_%H%M%S')
             })
             
-            print(f"✅ Training metadata logged successfully. Data timestamp: {data_max_timestamp}, Records: {records_count}")
+            print(f"Training metadata logged successfully. Data timestamp: {data_max_timestamp}, Records: {records_count}")
             
     except Exception as e:
-        print(f"❌ Error logging training metadata: {e}")
+        print(f"Error logging training metadata: {e}")
         # Don't raise - logging failure shouldn't stop the pipeline

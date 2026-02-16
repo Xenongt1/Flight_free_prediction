@@ -15,7 +15,8 @@ from src.transformers import (
     DurationCategoryEngineer, 
     SeasonEngineer, 
     CustomOrdinalEncoder,
-    Columndropper
+    Columndropper,
+    DataNormalizer
 )
 
 logger = get_logger(__name__)
@@ -55,6 +56,7 @@ def create_preprocessing_pipeline(scale_numeric: bool = True):
     
     # Return a FLAT pipeline to avoid NotFittedError issues with nesting
     return Pipeline([
+        ('normalizer', DataNormalizer()),
         ('date_engineer', DateFeatureEngineer(date_col='Date')),
         ('time_of_day', TimeOfDayEngineer(hour_col='Dep_Hour')),
         ('cyclical', CyclicalFeatureEngineer()),
@@ -80,6 +82,7 @@ def engineer_features(df: pd.DataFrame, encode: bool = True, scale: bool = False
     """
     # 1. Always create the feature generation part
     feature_generation = Pipeline([
+        ('normalizer', DataNormalizer()),
         ('date_engineer', DateFeatureEngineer(date_col='Date')),
         ('time_of_day', TimeOfDayEngineer(hour_col='Dep_Hour')),
         ('cyclical', CyclicalFeatureEngineer()),

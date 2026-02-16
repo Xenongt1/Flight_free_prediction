@@ -4,6 +4,55 @@ import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from src.utils import get_logger
 
+class DataNormalizer(BaseEstimator, TransformerMixin):
+    """
+    Standardizes names for Airlines and Cities to ensure consistency 
+    between Database and UI inputs.
+    """
+    def __init__(self):
+        self.airline_map = {
+            'Us-Bangla Airlines': 'US-Bangla Airlines',
+            'Novoair': 'NovoAir',
+            'Airasia': 'AirAsia',
+            'Indigo': 'IndiGo',
+            'Srilankan Airlines': 'SriLankan Airlines'
+        }
+        
+    def fit(self, X, y=None):
+        return self
+
+    def _clean_city(self, city):
+        if not isinstance(city, str): return city
+        # Extract city from "Airport Name, City" or "City Airport"
+        if ',' in city:
+            return city.split(',')[-1].strip()
+        # Handle "Cox'S Bazar Airport" -> "Cox's Bazar"
+        if "Cox'S Bazar" in city: return "Cox's Bazar"
+        # Remove "Airport" suffix
+        if ' Airport' in city:
+            return city.replace(' Airport', '').strip()
+        if ' International' in city:
+             return city.replace(' International', '').strip()
+        return city.strip()
+
+    def transform(self, X):
+        X = X.copy()
+        
+        # 1. Normalize Airlines
+        if 'Airline' in X.columns:
+            X['Airline'] = X['Airline'].replace(self.airline_map)
+            
+        # 2. Normalize Cities
+        for col in ['Source', 'Destination']:
+            if col in X.columns:
+                X[col] = X[col].apply(self._clean_city)
+                
+        # 3. Handle Aircraft Types (ensure common format)
+        if 'Aircraft Type' in X.columns:
+            X['Aircraft Type'] = X['Aircraft Type'].str.replace('AirbusA', 'Airbus A', regex=False)
+            
+        return X
+
 logger = get_logger(__name__)
 
 class DateFeatureEngineer(BaseEstimator, TransformerMixin):
