@@ -82,21 +82,43 @@ def create_preprocessing_pipeline(scale_numeric: bool = True):
 
 def engineer_features(df: pd.DataFrame, encode: bool = True, scale: bool = False) -> pd.DataFrame:
     """
-    Legacy wrapper for compatibility or EDA.
-    Applies the pipeline and returns a DataFrame.
+    Apply feature engineering to a DataFrame.
+    
+    Args:
+        df (pd.DataFrame): Input dataframe.
+        encode (bool): Whether to apply categorical encoding (OneHot). 
+                      If False, returns a DataFrame with human-readable features (good for EDA).
+        scale (bool): Whether to scale numeric features.
+        
+    Returns:
+        pd.DataFrame: Transformed dataframe.
     """
+    # 1. Always create the feature generation part
+    feature_generation = Pipeline([
+        ('date_engineer', DateFeatureEngineer(date_col='Date')),
+        ('time_of_day', TimeOfDayEngineer(hour_col='Dep_Hour')),
+        ('cyclical', CyclicalFeatureEngineer()),
+        ('route', RouteEngineer()),
+        ('duration_cat', DurationCategoryEngineer(duration_col='Duration (hrs)')),
+        ('season', SeasonEngineer()),
+        ('ordinal', CustomOrdinalEncoder()),
+    ])
+    
+    # Apply feature generation
+    df_transformed = feature_generation.fit_transform(df)
+    
+    if not encode:
+        # Return the feature-engineered but NOT encoded DataFrame
+        # This is strictly for EDA as it preserves all columns including target
+        return df_transformed
+        
+    # 2. If encode is True, apply the full pipeline including ColumnTransformer
     pipeline = create_preprocessing_pipeline(scale_numeric=scale)
     
-    # The pipeline output will be a numpy array (from ColumnTransformer)
-    # To return a DataFrame with names, we need to get feature names.
-    
-    # Note: ColumnTransformer in recent sklearn versions supports output='pandas' via set_config
-    # or assert DataFrame output.
-    
+    # We use the full pipeline on the original df
     array_output = pipeline.fit_transform(df)
     
-    # Get feature names
-    # Access the last step 'preprocessor'
+    # Get feature names from the preprocessor
     preprocessor = pipeline.named_steps['preprocessor']
     feature_names = preprocessor.get_feature_names_out()
     
