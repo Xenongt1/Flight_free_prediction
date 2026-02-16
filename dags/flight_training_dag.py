@@ -32,7 +32,7 @@ with DAG(
     # For simplicity, we use the system python or a specific venv if known.
     train_model = BashOperator(
         task_id='train_model',
-        bash_command='cd /opt/airflow/ml_pipeline && python run_pipeline.py',
+        bash_command='cd /opt/airflow/ml_pipeline && pip install --no-cache-dir -r requirements.txt && python run_pipeline.py',
         env={
             'DATA_SOURCE': 'postgres', # Force DB source for Airflow runs
             # Pass other env vars if needed, or rely on .env file loading in config.py
