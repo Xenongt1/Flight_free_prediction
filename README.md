@@ -1,4 +1,4 @@
-# ✈️ Flight Fare Prediction - Bangladesh
+# Flight Fare Prediction - Bangladesh
 
 > **A production-ready machine learning system for predicting flight fares with automated retraining, REST API deployment, and comprehensive analytics.**
 
@@ -9,7 +9,7 @@
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 - [Project Overview](#-project-overview)
 - [Key Deliverables](#-key-deliverables)
 - [Architecture](#-architecture)
@@ -24,7 +24,7 @@
 
 ---
 
-## 🎯 Project Overview
+## Project Overview
 
 ### Business Goal
 Airlines and travel platforms in Bangladesh need accurate fare predictions to:
@@ -42,9 +42,9 @@ Airlines and travel platforms in Bangladesh need accurate fare predictions to:
 
 ---
 
-## 📦 Key Deliverables
+## Key Deliverables
 
-### ✅ 1. Complete ML Pipeline
+### 1. Complete ML Pipeline
 - **Data Loading & Validation** (`src/data_loader.py`)
 - **Data Cleaning & Preprocessing** (`src/preprocessing.py`)
   - Missing value imputation
@@ -59,7 +59,7 @@ Airlines and travel platforms in Bangladesh need accurate fare predictions to:
   - Ordinal encoding for Stopovers and Class
   - StandardScaler for numerical features
 
-### ✅ 2. Comprehensive EDA
+### 2. Comprehensive EDA
 - **15 Visualizations** in `reports/figures/`:
   - Distribution plots
   - Boxplots by airline, season, route
@@ -72,16 +72,16 @@ Airlines and travel platforms in Bangladesh need accurate fare predictions to:
   - Correlation matrices
   - KPI calculations
 
-### ✅ 3. Multiple ML Models
+### 3. Multiple ML Models
 Implemented and compared **6 different models**:
 1. **Linear Regression** (Baseline)
 2. **Ridge Regression** (L2 regularization)
 3. **Lasso Regression** (L1 regularization)
 4. **Decision Tree Regressor**
 5. **Random Forest Regressor**
-6. **Gradient Boosting Regressor** ⭐ (Best Model)
+6. **Gradient Boosting Regressor** (Best Model)
 
-### ✅ 4. Hyperparameter Optimization
+### 4. Hyperparameter Optimization
 - **GridSearchCV** with 3-fold cross-validation
 - Tuned parameters:
   - `n_estimators`: [100, 200]
@@ -90,7 +90,7 @@ Implemented and compared **6 different models**:
   - `subsample`: [0.8, 1.0]
 - **Best Configuration**: `learning_rate=0.05`, `max_depth=3`, `n_estimators=200`, `subsample=0.8`
 
-### ✅ 5. Production REST API
+### 5. Production REST API
 - **FastAPI** application (`app.py`)
 - **Docker containerized** (`Dockerfile.api`)
 - **Endpoints**:
@@ -101,13 +101,13 @@ Implemented and compared **6 different models**:
 - **Comprehensive tests** (`test_api.py`)
 - **Running on port 8000**
 
-### ✅ 6. Streamlit Web Application
+### 6. Streamlit Web Application
 - Interactive UI for fare predictions (`streamlit_app.py`)
 - Real-time predictions via API integration
 - User-friendly input forms
 - Visual prediction results
 
-### ✅ 7. Airflow Integration
+### 7. Airflow Integration
 - **Automated ETL pipeline** (`dags/flight_price_dag.py`)
 - **Smart retraining logic**:
   - Monitors new data volume
@@ -116,7 +116,7 @@ Implemented and compared **6 different models**:
 - **PostgreSQL integration** for data persistence
 - **Scheduled execution** with configurable intervals
 
-### ✅ 8. Comprehensive Documentation
+### 8. Comprehensive Documentation
 - **README.md** - Project overview (this file)
 - **MODEL_REPORT.md** - Detailed model analysis and insights
 - **API_DEPLOYMENT_SUMMARY.md** - API deployment guide
@@ -128,7 +128,7 @@ Implemented and compared **6 different models**:
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────┐
@@ -187,7 +187,7 @@ Implemented and compared **6 different models**:
 
 ---
 
-## 🚀 Features
+## Features
 
 ### Advanced Feature Engineering
 - **Temporal Features**: Month, Day, Weekday, Season, Time_of_Day
@@ -212,7 +212,7 @@ Implemented and compared **6 different models**:
 
 ---
 
-## 💻 Installation & Setup
+## Installation & Setup
 
 ### Prerequisites
 - Python 3.8+
@@ -258,7 +258,7 @@ docker run -d -p 8000:8000 --name flight-api flight-fare-api
 
 ---
 
-## 📖 Usage
+## Usage
 
 ### 1. Train the Model
 
@@ -299,7 +299,7 @@ python test_api.py
 
 ---
 
-## 🔌 API Documentation
+## API Documentation
 
 ### Base URL
 ```
@@ -392,7 +392,7 @@ GET /model/info
 
 ---
 
-## 📊 Model Performance
+## Model Performance
 
 ### Final Model: Gradient Boosting Regressor
 
@@ -411,7 +411,7 @@ GET /model/info
 | Lasso Regression | 0.5649 | 40,214 | 53,851 |
 | Decision Tree | 0.5200 | 35,000 | 56,500 |
 | Random Forest | 0.6100 | 32,000 | 51,000 |
-| **Gradient Boosting** ⭐ | **0.6428** | **28,707** | **48,794** |
+| **Gradient Boosting** | **0.6428** | **28,707** | **48,794** |
 
 ### Key Insights
 
@@ -423,7 +423,7 @@ GET /model/info
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 flight-fare-prediction/
@@ -470,9 +470,9 @@ flight-fare-prediction/
 
 ---
 
-## 🎯 Stretch Challenges (All Completed!)
+## Stretch Challenges (All Completed!)
 
-### ✅ Challenge 1: Web Application
+### Challenge 1: Web Application
 **Status**: **COMPLETED**
 - Built Streamlit app with interactive UI
 - Real-time predictions via API
@@ -481,7 +481,7 @@ flight-fare-prediction/
 
 **Files**: `streamlit_app.py`, `STREAMLIT_GUIDE.md`
 
-### ✅ Challenge 2: Airflow Integration
+### Challenge 2: Airflow Integration
 **Status**: **COMPLETED**
 - Automated ETL pipeline with scheduled execution
 - Smart retraining logic based on data volume threshold
@@ -491,7 +491,7 @@ flight-fare-prediction/
 
 **Files**: `dags/flight_price_dag.py`, `scripts/retrain_model.py`
 
-### ✅ Challenge 3: REST API Deployment
+### Challenge 3: REST API Deployment
 **Status**: **COMPLETED**
 - FastAPI REST API with 4 endpoints
 - Docker containerization for easy deployment
@@ -503,7 +503,7 @@ flight-fare-prediction/
 
 ---
 
-## 📚 Documentation
+## Documentation
 
 ### Available Documentation Files
 
@@ -528,7 +528,7 @@ flight-fare-prediction/
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 This is a complete, production-ready project. For improvements or extensions:
 1. Fork the repository
@@ -538,20 +538,20 @@ This is a complete, production-ready project. For improvements or extensions:
 
 ---
 
-## 📄 License
+## License
 
 This project is part of a machine learning portfolio demonstrating end-to-end ML system development.
 
 ---
 
-## 👨‍💻 Author
+## Author
 
 **Mubarak Tijani**
 - GitHub: [@Xenongt1](https://github.com/Xenongt1)
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - Dataset: Flight Price Dataset of Bangladesh
 - Tools: Scikit-learn, FastAPI, Streamlit, Apache Airflow, Docker, PostgreSQL
