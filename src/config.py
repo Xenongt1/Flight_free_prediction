@@ -27,8 +27,8 @@ RANDOM_SEED = 42
 # Database Configuration
 DB_USER = os.getenv("DB_USER", "analytics_user")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "analytics_password")
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_PORT = os.getenv("DB_PORT", "5434")
+DB_HOST = os.getenv("DB_HOST", "postgres_analytics")  # ✅ FIX: Container hostname
+DB_PORT = os.getenv("DB_PORT", "5432")  # ✅ FIX: Container port (not host-mapped port)
 DB_NAME = os.getenv("DB_NAME", "flight_analytics")
 
 DB_CONNECTION_STRING = f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
@@ -37,3 +37,4 @@ DATA_SOURCE = os.getenv("DATA_SOURCE", "csv") # Options: 'csv', 'postgres'
 # Model Parameters
 TEST_SIZE = 0.2
 TARGET_COL = "Total Fare (BDT)"
+

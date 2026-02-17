@@ -45,12 +45,8 @@ def main():
             
             # Separate features and target
             # We pass RAW data (after basic preprocessing) to the pipeline
-            # Drop columns that shouldn't be features
-            drop_cols = [
-                target_col, 
-                'Base Fare (BDT)',       # LEAKAGE
-                'Tax & Surcharge (BDT)',  # LEAKAGE
-            ]
+            # Only drop the target column (leakage columns already removed from query)
+            drop_cols = [target_col]
             
             X_raw = df.drop(columns=drop_cols, errors='ignore')
             y = df[target_col]
