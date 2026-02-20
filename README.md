@@ -130,59 +130,43 @@ Implemented and compared **6 different models**:
 
 ## Architecture
 
-```
-┌─────────────────┐
-│  Raw Data (CSV) │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────────────┐
-│  Data Cleaning          │
-│  - Missing values       │
-│  - Outliers             │
-│  - Normalization        │
-└────────┬────────────────┘
-         │
-         ▼
-┌─────────────────────────┐
-│  Feature Engineering    │
-│  - Temporal features    │
-│  - Cyclical encoding    │
-│  - One-hot encoding     │
-│  - Scaling              │
-└────────┬────────────────┘
-         │
-         ▼
-┌─────────────────────────┐
-│  Model Training         │
-│  - Multiple models      │
-│  - GridSearchCV         │
-│  - Cross-validation     │
-└────────┬────────────────┘
-         │
-         ▼
-┌─────────────────────────┐
-│  Model Evaluation       │
-│  - R², MAE, RMSE        │
-│  - Visualizations       │
-│  - Feature importance   │
-└────────┬────────────────┘
-         │
-         ▼
-┌─────────────────────────┐
-│  Deployment             │
-│  - FastAPI REST API     │
-│  - Docker Container     │
-│  - Streamlit UI         │
-└─────────────────────────┘
-         │
-         ▼
-┌─────────────────────────┐
-│  Airflow Automation     │
-│  - Scheduled ETL        │
-│  - Smart Retraining     │
-│  - PostgreSQL Storage   │
-└─────────────────────────┘
+> **Note**: You can view and edit the visual diagram by importing `architecture.drawio` into [draw.io](https://app.diagrams.net/).
+
+```mermaid
+graph TD
+    subgraph Airflow["🌬️ Apache Airflow Orchestration"]
+        subgraph DE["📁 airflow-flight (Data Engineering)"]
+            Kaggle["Kaggle API"] -->|Extract| MySQL["MySQL Staging"]
+            MySQL -->|SQL Transform| Star["Star Schema Mapping"]
+            Star -->|Incremental Load| Postgres["🐘 Postgres Warehouse"]
+            Postgres -->|Mat Views| KPI["KPI Dashboard"]
+        end
+
+        subgraph ML["📁 flight-fare-prediction (ML Pipeline)"]
+            ML_Clean["🐍 Data Cleaning"]
+            ML_Feat["🐍 Feature Engineering"]
+            ML_Train["🐍 Model Training"]
+            
+            ML_Clean --> ML_Feat --> ML_Train
+        end
+        
+        %% Inter-process connection
+        Postgres -->|ML Features Source| ML_Clean
+    end
+
+    %% Deployment Layer
+    subgraph Deploy["🚀 Deployment Layer"]
+        ML_Train -->|Save| PKL["best_model.pkl"]
+        PKL -->|Serve| API["⚡ FastAPI & Docker"]
+        API -->|Consume| Streamlit["🎨 Streamlit UI"]
+    end
+
+    %% Styling
+    style Airflow fill:#f9f9f9,stroke:#333,stroke-width:2px
+    style DE fill:#dae8fc,stroke:#6c8ebf
+    style ML fill:#ffe6cc,stroke:#d79b00
+    style Deploy fill:#d5e8d4,stroke:#82b366
+    style Postgres fill:#ffffff,stroke:#333,stroke-width:2px
 ```
 
 ---
@@ -465,6 +449,7 @@ flight-fare-prediction/
 ├── README.md                        # This file
 ├── API_DEPLOYMENT_SUMMARY.md        # API docs
 ├── STREAMLIT_GUIDE.md               # Streamlit docs
+├── architecture.drawio              # Editable architecture diagram
 └── PROJECT_COMPLETION_CHECKLIST.md  # Verification
 ```
 

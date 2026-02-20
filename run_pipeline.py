@@ -1,6 +1,7 @@
 """
 Main script to run the pipeline.
 """
+from datetime import datetime
 from src import config
 from src import data_loader
 from src import preprocessing
@@ -10,6 +11,8 @@ from src import train
 from src import evaluate
 from src.utils import get_logger
 from src.log_metadata import log_training_metadata
+import mlflow
+import mlflow.sklearn
 
 logger = get_logger(__name__)
 
@@ -58,27 +61,38 @@ def main():
             # The pipeline will handle all feature engineering internally
             logger.info("--- Training with Full Pipeline (Preprocessing + Model) ---")
             
-            best_model_pipeline, X_test_raw, y_test = train.train_model(
-                X_raw, y,
-                preprocessing_pipeline=preprocessing_pipeline,
-                model_type="tune_gradient_boosting",
-                log_target=True,
-                remove_outliers=True
-            )
+            mlflow.set_tracking_uri(config.MLFLOW_TRACKING_URI)
+            mlflow.set_experiment(config.MLFLOW_EXPERIMENT_NAME)
             
-            # 6. Evaluate
-            # Note: X_test_raw is still raw data, the pipeline will transform it
-            metrics = evaluate.evaluate_model(best_model_pipeline, X_test_raw, y_test)
+            with mlflow.start_run(run_name=f"Flight_Fare_{datetime.now().strftime('%Y%m%d_%H%M%S')}"):
+                best_model_pipeline, X_test_raw, y_test = train.train_model(
+                    X_raw, y,
+                    preprocessing_pipeline=preprocessing_pipeline,
+                    model_type="tune_gradient_boosting",
+                    log_target=True,
+                    remove_outliers=True
+                )
+                
+                # 6. Evaluate
+                # Note: X_test_raw is still raw data, the pipeline will transform it
+                metrics = evaluate.evaluate_model(best_model_pipeline, X_test_raw, y_test)
+                
+                # Register the model in MLflow Model Registry
+                logger.info(f"Registering model in MLflow Registry: {config.MLFLOW_MODEL_NAME}")
+                mlflow.sklearn.log_model(
+                    sk_model=best_model_pipeline,
+                    artifact_path="model",
+                    registered_model_name=config.MLFLOW_MODEL_NAME
+                )
+                
+                logger.info(f"Full pipeline saved to {config.MODEL_PATH} and logged to MLflow")
+                logger.info("The saved model can now accept raw input data for inference!")
             
-            logger.info(f"Full pipeline saved to {config.MODEL_PATH}")
-            logger.info("The saved model can now accept raw input data for inference!")
-            
-            # 7. Log Training Metadata
+            # 7. Log Training Metadata (Database)
             # Get the max timestamp from the data
             if 'Date' in df.columns:
                 data_max_timestamp = df['Date'].max()
             else:
-                from datetime import datetime
                 data_max_timestamp = datetime.now()
             
             # Extract metrics if available

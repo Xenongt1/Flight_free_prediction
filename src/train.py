@@ -13,6 +13,8 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.compose import TransformedTargetRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import mean_squared_error, r2_score
+import mlflow
+import mlflow.sklearn
 from src import config
 from src.utils import get_logger, save_model
 
@@ -38,6 +40,15 @@ def train_model(X: pd.DataFrame, y: pd.Series, preprocessing_pipeline=None,
     """
     try:
         logger.info("Starting model training...")
+        
+        # Initialize MLflow tracking if not managed by caller
+        if not mlflow.active_run():
+            mlflow.set_tracking_uri(config.MLFLOW_TRACKING_URI)
+            mlflow.set_experiment(config.MLFLOW_EXPERIMENT_NAME)
+            logger.info(f"MLflow Run initialized for experiment: {config.MLFLOW_EXPERIMENT_NAME}")
+
+        # Enable autologging for scikit-learn
+        mlflow.sklearn.autolog(log_models=True)
         
         # Split data
         X_train, X_test, y_train, y_test = train_test_split(

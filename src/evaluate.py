@@ -11,6 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+import mlflow
 from src import config
 from src.utils import get_logger
 
@@ -54,6 +55,13 @@ def evaluate_model(model, X_test: pd.DataFrame, y_test: pd.Series) -> dict:
         # Generate and save plots
         _plot_predictions(y_test, y_pred)
         _plot_residuals(y_test, y_pred)
+        
+        # Log to MLflow if run is active
+        if mlflow.active_run():
+            logger.info("Logging metrics and plots to MLflow...")
+            mlflow.log_metrics(metrics)
+            mlflow.log_artifact(os.path.join(config.PLOTS_DIR, "prediction_scatter.png"), artifact_path="plots")
+            mlflow.log_artifact(os.path.join(config.PLOTS_DIR, "residuals_dist.png"), artifact_path="plots")
             
         return metrics
     except Exception as e:

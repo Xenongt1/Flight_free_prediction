@@ -60,3 +60,7 @@ models/*.joblib
 # OS related
 .DS_Store
 Thumbs.db
+PROJECT_WORK_SUMMARY.txt
+mlflow.db
+mlartifacts/
+mlruns/

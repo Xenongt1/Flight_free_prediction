@@ -38,3 +38,8 @@ DATA_SOURCE = os.getenv("DATA_SOURCE", "csv") # Options: 'csv', 'postgres'
 TEST_SIZE = 0.2
 TARGET_COL = "Total Fare (BDT)"
 
+# MLflow Configuration
+MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
+MLFLOW_EXPERIMENT_NAME = "Flight_Fare_Prediction"
+MLFLOW_MODEL_NAME = "flight_fare_predictor"
+
